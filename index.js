@@ -5,10 +5,8 @@ const DB = process.env.DATABASE_URL.replace('<password>', process.env.DATABASE_P
 
 mongoose
   .connect(DB, {
-    // useNewUrlParser: true,
-    // useCreateIndex: true,
-    // useFindAndModify: false,
-    // useUnifiedTopology: true,
+    useNewUrlParser: true,
+    useUnifiedTopology: true
   })
   .then((con) => {
     console.log('DB connection successful!')
@@ -17,7 +15,7 @@ mongoose
     console.log(err)
   })
 
-const PORT = 5000
+const PORT = process.env.PORT || 80
 app.listen(PORT, () => {
   console.log(`Listening on ${PORT}`)
 })
