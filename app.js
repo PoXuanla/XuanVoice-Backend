@@ -4,7 +4,7 @@ const dotenv = require('dotenv')
 const userRoute = require('./routes/userRoute')
 const app = express()
 
-dotenv.config({ path: './config.env' })
+dotenv.config({ path: '.env' })
 //MiddleWare
 app.use(cors())
 app.use(express.json())
