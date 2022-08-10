@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, '必須要有密碼'],
-    minlength: [6, '密碼不得小於六個字'],
+    minlength: [6, '密碼不得小於六個字']
   },
   intro: {
     type: String,
@@ -29,8 +29,14 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: Date.now(),
     select: false
-  }
+  },
+  songs: [
+    {
+      type: mongoose.ObjectId,
+      ref: 'songs'
+    }
+  ]
 })
-const User = mongoose.model('user', userSchema)
+const User = mongoose.model('users', userSchema)
 
 module.exports = User
