@@ -4,19 +4,19 @@ const verifyToken = (req, res, next) => {
   const token = getToken(req)
   if (!token) {
     // header 缺少 token
-    return res.status(200).json({
-      status: 'failed',
-      message: 'Lack Token'
+    return res.status(401).json({
+      status: 'tokenError',
+      message: '憑證失效或錯誤，請重新登入!'
     })
   }
   try {
     const decoded = jwt.verify(token, process.env.JWT_PRIVATE_KEY)
-    req.body.user = decoded.user
+    req.user = decoded.user
   } catch (err) {
-    res.status(200).json({
+    res.status(401).json({
       //token 解析失敗
-      status: 'failed',
-      message: 'Invalid token'
+      status: 'tokenError',
+      message: '憑證失效或錯誤，請重新登入!'
     })
   }
   return next()

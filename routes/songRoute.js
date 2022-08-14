@@ -11,6 +11,10 @@ const {
   updateSongBySongId
 } = require('../controllers/songController')
 
+const authMiddleware = require('../middleware/authMiddleware')
+
+router.use(authMiddleware) //valid token
+
 router.route('/').post(upload.fields([{ name: 'mp3' }, { name: 'img' }]), createSong)
 router
   .route('/:songId')

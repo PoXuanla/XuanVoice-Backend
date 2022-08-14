@@ -100,6 +100,7 @@ exports.login = async (req, res) => {
     // find user and return all fields except password
     const user = await User.findOne({ account })
     if (user && (await bcrypt.compare(password, user.password))) {
+      user.password = undefined
       const token = jwt.sign(
         {
           user: user
@@ -109,7 +110,6 @@ exports.login = async (req, res) => {
           expiresIn: '7d'
         }
       )
-      user.password = undefined
       return res.json({
         status: 'success',
         user,
@@ -131,13 +131,13 @@ exports.login = async (req, res) => {
 exports.test = (req, res) => {
   res.json({
     status: 'success',
-    user: req.body.user
+    user: req.user
   })
 }
 
 exports.getSongByUser = async (req, res) => {
   try {
-    const userId = req.params.userId
+    const userId = req.user._id
     const songs = await Song.find({
       author: userId
     })
@@ -158,7 +158,7 @@ exports.getUserInform = async (req, res) => {
     const account = req.params.account
     const inform = await User.findOne({ account: account }).populate({
       path: 'songs',
-      select: ['name','image']
+      select: ['name', 'image']
     })
 
     if (inform === null) {

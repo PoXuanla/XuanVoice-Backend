@@ -4,12 +4,15 @@ const User = require('../models/userModels')
 
 exports.createSong = async (req, res) => {
   try {
+    const userId = req.user._id
+
+    // console.log(`create song author: ${req.body.author}`)
+    // return
+
     //找到 User 更新 populate song
+    req.body.author = userId
     const song = await Song.create(req.body)
-    const user = await User.findByIdAndUpdate(
-      { _id: req.body.author },
-      { $push: { songs: song._id } }
-    )
+    const user = await User.findByIdAndUpdate({ _id: userId }, { $push: { songs: song._id } })
     const mp3 = req.files['mp3'][0]
     mp3.originalname = `${song._id}.mp3`
     const bucket = getStorage().bucket() //連接firebase bucket
@@ -55,6 +58,7 @@ exports.createSong = async (req, res) => {
       }
     })
   } catch (error) {
+    console.log(`create song ${error}`)
     res.status(200).json({
       status: 'failed',
       message: error
@@ -82,9 +86,11 @@ exports.getSongBySongId = async (req, res) => {
 }
 exports.deleteSongBySongId = async (req, res) => {
   try {
+    const userId = req.user._id
     const songId = req.params.songId
     const song = await Song.findById({ _id: songId })
     if (!song) throw '無此音樂'
+    if (userId !== song.author.toString()) throw '無權執行此操作'
     await Song.deleteOne({ _id: songId })
     await User.findOneAndUpdate(
       { _id: song.author },
@@ -110,8 +116,10 @@ exports.deleteSongBySongId = async (req, res) => {
 exports.updateSongBySongId = async (req, res) => {
   try {
     const songId = req.params.songId
+    const userId = req.user._id
+    const songData = await Song.findById({ _id: songId })
+    if (userId !== songData.author.toString()) throw '無權執行此操作'
     const updateSong = await Song.findByIdAndUpdate({ _id: songId }, req.body, { new: true })
-
     if (req.files['img']) {
       const img = req.files['img'][0]
       img.originalname = `${updateSong._id}.jpg`
@@ -130,20 +138,18 @@ exports.updateSongBySongId = async (req, res) => {
           { new: true }
         )
         res.status(200).json({
-          status: 'successs',
-          song: updateImgSong
+          status: 'successs'
         })
       })
       blobStream.end(img.buffer)
     } else {
       res.status(200).json({
-        status: 'success',
-        song: updateSong
+        status: 'success'
       })
     }
   } catch (err) {
     console.log(err)
-    res.status(200).json({
+    res.status(400).json({
       status: 'failed',
       message: err
     })

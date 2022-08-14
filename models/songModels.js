@@ -33,6 +33,6 @@ const songSchema = new mongoose.Schema({
     select: false
   }
 })
-const SongCategory = mongoose.model('songs', songSchema)
+const Song = mongoose.model('songs', songSchema)
 
-module.exports = SongCategory
+module.exports = Song

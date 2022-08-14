@@ -35,6 +35,12 @@ const userSchema = new mongoose.Schema({
       type: mongoose.ObjectId,
       ref: 'songs'
     }
+  ],
+  songList: [
+    {
+      type: mongoose.ObjectId,
+      ref: 'songlists'
+    }
   ]
 })
 const User = mongoose.model('users', userSchema)

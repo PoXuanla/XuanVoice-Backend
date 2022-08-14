@@ -4,6 +4,7 @@ const dotenv = require('dotenv')
 const userRoute = require('./routes/userRoute')
 const songCategoryRoute = require('./routes/songCategoryRoute')
 const songRoute = require('./routes/songRoute')
+const songListRoute = require('./routes/songListRoute')
 const app = express()
 
 dotenv.config({ path: '.env' })
@@ -16,5 +17,5 @@ app.use(express.static(`${__dirname}/public`))
 app.use('/api/v1/users', userRoute)
 app.use('/api/v1/songCategory', songCategoryRoute)
 app.use('/api/v1/songs', songRoute)
-
+app.use('/api/v1/songList', songListRoute)
 module.exports = app
