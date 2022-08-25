@@ -138,10 +138,15 @@ exports.test = (req, res) => {
 exports.getSongByUser = async (req, res) => {
   try {
     const userId = req.user._id
-    const songs = await Song.find({
-      author: userId
+    const songs = await Song.find(
+      {
+        author: userId
+      },
+      { _id: 1, name: 1, image: 1, author: 1 }
+    ).populate({
+      path: 'author',
+      select: ['name', 'account']
     })
-    console.log(songs)
     res.status(200).json({
       status: 'success',
       song: songs
@@ -156,11 +161,17 @@ exports.getSongByUser = async (req, res) => {
 exports.getUserInform = async (req, res) => {
   try {
     const account = req.params.account
-    const inform = await User.findOne({ account: account }).populate({
+    const inform = await User.findOne(
+      { account: account },
+      { _id: 1, account: 1, name: 1, intro: 1, image: 1, songs: 1 }
+    ).populate({
       path: 'songs',
-      select: ['name', 'image']
+      select: ['_id', 'name', 'image', 'author'],
+      populate: {
+        path: 'author',
+        select: ['name', 'account']
+      }
     })
-
     if (inform === null) {
       res.status(200).json({
         status: 'failed'

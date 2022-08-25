@@ -6,9 +6,6 @@ exports.createSong = async (req, res) => {
   try {
     const userId = req.user._id
 
-    // console.log(`create song author: ${req.body.author}`)
-    // return
-
     //找到 User 更新 populate song
     req.body.author = userId
     const song = await Song.create(req.body)
@@ -71,7 +68,6 @@ exports.getSongBySongId = async (req, res) => {
     const song = await Song.findById({ _id: songId })
       .populate({ path: 'songCategory', select: 'name' })
       .populate({ path: 'author', select: 'name' })
-    console.log(song)
     res.status(200).json({
       status: 'success',
       song: song

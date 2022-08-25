@@ -11,8 +11,9 @@ const songListSchema = new mongoose.Schema({
   },
   songs: [
     {
-      type: mongoose.ObjectId,
-      ref: 'songs'
+      songId: { type: mongoose.ObjectId, ref: 'songs' },
+      order: { type: Number, required: true, default: 0 },
+      createdAt: { type: Date, default: Date.now() }
     }
   ],
   createdAt: {
