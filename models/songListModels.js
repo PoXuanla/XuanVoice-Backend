@@ -21,6 +21,16 @@ const songListSchema = new mongoose.Schema({
     required: true,
     default: Date.now(),
     select: false
+  },
+  orderBy: {
+    type: String,
+    default: 'createdAt',
+    required: true
+  },
+  sort: {
+    type: String,
+    default: 'asc',
+    required: true
   }
 })
 const SongList = mongoose.model('songlists', songListSchema)

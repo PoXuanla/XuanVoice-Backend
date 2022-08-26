@@ -74,33 +74,7 @@ exports.getListsAndCheckSongExistList = async (req, res) => {
 }
 
 /* route('/:songListId') */
-exports.getListSongs = async (req, res) => {
-  try {
-    const songListId = req.params.songListId
-    const songListData = await SongList.findById({ _id: songListId }).populate({
-      path: 'songs.songId',
-      select: 'name image author',
-      populate: {
-        path: 'author',
-        select: 'account'
-      }
-    })
-    const songs = songListData.songs
 
-    const processSongs = songs.map((song) => song.songId)
-
-    res.status(200).json({
-      status: 'success',
-      listName: songListData.name,
-      songs: processSongs
-    })
-  } catch (e) {
-    res.status(400).json({
-      status: 'failed',
-      message: '不明原因失敗ff'
-    })
-  }
-}
 exports.patchListData = async (req, res) => {
   try {
     const songListId = req.params.songListId
@@ -183,90 +157,113 @@ exports.deleteList = async (req, res) => {
   }
 }
 
-exports.testGetSongs = async (req, res) => {
+exports.getListSongs = async (req, res) => {
   try {
     const songListId = mongoose.Types.ObjectId(req.params.songListId)
-    const order = req.query.order
-    const sort = req.query.sort
-    //加入歌單時間
-    if (order === 'createdTime') {
-      await SongList.aggregate([
-        { $match: { _id: songListId } },
-        {
-          $unwind: '$songs'
-        },
-        {
-          $sort: { 'songs.createdAt': sort === 'asc' ? 1 : -1 }
-        },
-        { $group: { _id: '$_id', songs: { $push: '$songs' } } }
-      ])
-        .then((songList) => {
-          res.status(200).json({
-            data: songList[0]
-          })
-        })
-        .catch((e) => {
-          res.status(400).json({
-            message: e
-          })
-        })
-    }
-    //創作者建立歌曲時間
-    if (order === 'songCreatedTime') {
-      await SongList.aggregate([
-        { $match: { _id: songListId } },
-        {
-          $unwind: '$songs'
-        },
-        {
-          $lookup: {
-            from: 'songs',
-            localField: 'songs.songId',
-            foreignField: '_id',
-            as: 'songInfo'
-          }
-        },
-        {
-          $sort: { 'songInfo.createdAt': sort === 'asc' ? 1 : -1 }
-        },
-        { $group: { _id: '$_id', songs: { $push: '$songs' } } }
-      ])
-        .then((songList) => {
-          res.status(200).json({
-            data: songList[0]
-          })
-        })
-        .catch((e) => {
-          res.status(400).json({
-            message: e
-          })
-        })
-    }
-    //自訂
-    if (order === 'custom') {
-      await SongList.aggregate([
-        { $match: { _id: songListId } },
-        {
-          $unwind: '$songs'
-        },
-        {
-          $sort: { 'songs.order': sort === 'asc' ? 1 : -1 }
-        },
-        { $group: { _id: '$_id', songs: { $push: '$songs' } } }
-      ])
-        .then((songList) => {
-          res.status(200).json({
-            data: songList[0]
-          })
-        })
-        .catch((e) => {
-          res.status(400).json({
-            message: e
-          })
-        })
-    }
+
+    const response = await SongList.findById({ _id: songListId }, 'orderBy sort name')
+    const { orderBy, sort, name } = response.toObject()
+    let sortMode = null
+    if (orderBy === 'createdTime') sortMode = { 'songs.createdAt': sort === 'asc' ? 1 : -1 }
+    if (orderBy === 'songCreatedTime')
+      sortMode = { 'songs.songCreatedTime': sort === 'asc' ? 1 : -1 }
+    if (orderBy === 'manual') sortMode = { 'songs.order': sort === 'asc' ? 1 : -1 }
+
+    let songList = await SongList.aggregate([
+      { $match: { _id: songListId } },
+      { $unwind: '$songs' },
+      {
+        $lookup: {
+          from: 'songs',
+          localField: 'songs.songId',
+          foreignField: '_id',
+          as: 'songInfo'
+        }
+      },
+      { $addFields: { songInfo: '$songInfo' } },
+      { $unwind: '$songInfo' },
+      {
+        $addFields: {
+          'songs.author': '$songInfo.author',
+          'songs.name': '$songInfo.name',
+          'songs.image': '$songInfo.image',
+          'songs.songCreatedTime': '$songInfo.createdAt'
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'songs.author',
+          foreignField: '_id',
+          as: 'userInfo'
+        }
+      },
+      { $unwind: '$userInfo' },
+      {
+        $addFields: {
+          'songs.author.name': '$userInfo.name',
+          'songs.author._id': '$userInfo._id',
+          'songs.author.account': '$userInfo.account'
+        }
+      },
+      { $sort: sortMode },
+      {
+        $group: {
+          _id: '$_id',
+          songs: { $push: '$songs' }
+        }
+      }
+    ])
+    let songListResponse = songList.map((data) => data.songs)
+    res.status(200).json({
+      status: 'success',
+      listName: name,
+      mode: { orderBy, sort },
+      songs: songListResponse[0]
+    })
   } catch (e) {
     res.status(400).json({
+      message: e
+    })
+  }
+}
+exports.replaceSongOrder = async (req, res) => {
+  try {
+    const songListId = req.params.songListId
+    const songs = req.body.songs
+    await SongList.findByIdAndUpdate({ _id: songListId }, { $set: { songs: songs } }, { new: true })
+
+    res.status(200).json({
+      status: 'success',
+      message: '順序調整成功'
+    })
+  } catch (e) {
+    res.status(400).json({
+      status: 'failed',
+      message: e
+    })
+  }
+}
+exports.replaceSortMode = async (req, res) => {
+  try {
+    const songListId = req.params.songListId
+    const orderBy = req.body.orderBy
+    const sort = req.body.sort
+
+    const result = await SongList.findByIdAndUpdate(
+      { _id: songListId },
+      { $set: { orderBy: orderBy, sort: sort } },
+      { new: true }
+    )
+
+    res.status(200).json({
+      status: 'success',
+      message: '已更新歌曲排序',
+      mode: { orderBy: result.orderBy, sort: result.sort }
+    })
+  } catch (e) {
+    res.status(400).json({
+      status: 'failed',
       message: e
     })
   }
