@@ -166,7 +166,7 @@ exports.getUserInform = async (req, res) => {
       { _id: 1, account: 1, name: 1, intro: 1, image: 1, songs: 1 }
     ).populate({
       path: 'songs',
-      select: ['_id', 'name', 'image', 'author'],
+      select: ['_id', 'name', 'image', 'author','mp3'],
       populate: {
         path: 'author',
         select: ['name', 'account']

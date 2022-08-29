@@ -1,6 +1,7 @@
 const Song = require('../models/songModels')
 const { getStorage } = require('firebase-admin/storage')
 const User = require('../models/userModels')
+const mongoose = require('mongoose')
 
 exports.createSong = async (req, res) => {
   try {
@@ -144,10 +145,71 @@ exports.updateSongBySongId = async (req, res) => {
       })
     }
   } catch (err) {
-    console.log(err)
     res.status(400).json({
       status: 'failed',
       message: err
+    })
+  }
+}
+exports.getBrowseSongs = async (req, res) => {
+  try {
+    const categoryId = req.params.categoryId //Id若是 all,則為全部歌曲
+
+    const orderStr = req.params.orderStr //最多喜歡:like,最新:latest
+    //先找到符合category的歌
+    //拉出資料
+    //再根據orderStr進行排序
+    let matchCategory
+    if (categoryId === 'all') matchCategory = { _id: { $ne: '' } }
+    else
+      matchCategory = {
+        songCategory: mongoose.Types.ObjectId(categoryId)
+      }
+
+    // if id === -1 return
+    // else match id
+    const songData = await Song.aggregate([
+      {
+        $match: matchCategory
+      },
+
+      // { $match: { songCategory: categoryId } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'author',
+          foreignField: '_id',
+          as: 'userInfo'
+        }
+      },
+      { $unwind: '$userInfo' },
+      {
+        $addFields: {
+          'author.name': '$userInfo.name',
+          'author._id': '$userInfo._id',
+          'author.account': '$userInfo.account'
+        }
+      },
+      { $sort: { createdAt: 1 } },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          author: { name: 1, account: 1 },
+          image: 1,
+          mp3: 1
+        }
+      }
+    ])
+
+    res.status(200).json({
+      status: 'success',
+      songs: songData
+    })
+  } catch (e) {
+    res.status(400).json({
+      status: 'failed',
+      message: e
     })
   }
 }

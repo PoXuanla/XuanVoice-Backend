@@ -161,17 +161,25 @@ exports.getListSongs = async (req, res) => {
   try {
     const songListId = mongoose.Types.ObjectId(req.params.songListId)
 
-    const response = await SongList.findById({ _id: songListId }, 'orderBy sort name')
-    const { orderBy, sort, name } = response.toObject()
+    const response = await SongList.findById({ _id: songListId }, 'orderBy sort name songs')
+    const { orderBy, sort, name, songs } = response.toObject()
     let sortMode = null
-    if (orderBy === 'createdTime') sortMode = { 'songs.createdAt': sort === 'asc' ? 1 : -1 }
+    if (orderBy === 'createdAt') sortMode = { 'songs.createdAt': sort === 'asc' ? 1 : -1 }
     if (orderBy === 'songCreatedTime')
       sortMode = { 'songs.songCreatedTime': sort === 'asc' ? 1 : -1 }
     if (orderBy === 'manual') sortMode = { 'songs.order': sort === 'asc' ? 1 : -1 }
-
+    if (songs.length === 0) {
+      res.status(200).json({
+        status: 'success',
+        listName: name,
+        mode: { orderBy, sort },
+        songs: songs
+      })
+    }
     let songList = await SongList.aggregate([
       { $match: { _id: songListId } },
       { $unwind: '$songs' },
+      { $addFields: {'songs.listName':'$name'} },
       {
         $lookup: {
           from: 'songs',
@@ -187,7 +195,8 @@ exports.getListSongs = async (req, res) => {
           'songs.author': '$songInfo.author',
           'songs.name': '$songInfo.name',
           'songs.image': '$songInfo.image',
-          'songs.songCreatedTime': '$songInfo.createdAt'
+          'songs.songCreatedTime': '$songInfo.createdAt',
+          'songs.mp3': '$songInfo.mp3'
         }
       },
       {
@@ -214,6 +223,7 @@ exports.getListSongs = async (req, res) => {
         }
       }
     ])
+
     let songListResponse = songList.map((data) => data.songs)
     res.status(200).json({
       status: 'success',

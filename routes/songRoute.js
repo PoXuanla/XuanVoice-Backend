@@ -8,7 +8,8 @@ const {
   getSongByUser,
   getSongBySongId,
   deleteSongBySongId,
-  updateSongBySongId
+  updateSongBySongId,
+  getBrowseSongs
 } = require('../controllers/songController')
 
 const authMiddleware = require('../middleware/authMiddleware')
@@ -21,4 +22,5 @@ router
   .get(getSongBySongId)
   .delete(deleteSongBySongId)
   .patch(upload.fields([{ name: 'img' }]), updateSongBySongId)
+router.route('/category/:categoryId/order/:orderStr').get(getBrowseSongs)
 module.exports = router
