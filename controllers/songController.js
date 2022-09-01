@@ -66,9 +66,9 @@ exports.createSong = async (req, res) => {
 exports.getSongBySongId = async (req, res) => {
   try {
     const songId = req.params.songId
-    const song = await Song.findById({ _id: songId })
+    const song = await Song.findById({ _id: songId },"_id name intro lyric mp3 image createdAt")
       .populate({ path: 'songCategory', select: 'name' })
-      .populate({ path: 'author', select: 'name' })
+      .populate({ path: 'author', select: 'name account' })
     res.status(200).json({
       status: 'success',
       song: song

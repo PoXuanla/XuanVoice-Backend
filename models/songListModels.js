@@ -3,7 +3,9 @@ const mongoose = require('mongoose')
 const songListSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, '必須要有名稱']
+    required: [true, '必須要有名稱'],
+    unique: true,
+    index: true
   },
   user: {
     type: mongoose.ObjectId,
@@ -34,5 +36,4 @@ const songListSchema = new mongoose.Schema({
   }
 })
 const SongList = mongoose.model('songlists', songListSchema)
-
 module.exports = SongList

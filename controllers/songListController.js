@@ -16,7 +16,7 @@ exports.createList = async (req, res) => {
         $push: { songList: songList._id }
       }
     )
-
+  
     res.status(200).json({
       status: 'success',
       message: '建立成功'
