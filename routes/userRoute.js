@@ -3,7 +3,7 @@ const {
   getAllUser,
   createUser,
   login,
-  test,
+  getTokenData,
   getSongByUser,
   getUserInform
 } = require('../controllers/userController')
@@ -15,9 +15,8 @@ const router = express.Router()
 router.route('/').get(getAllUser).post(upload.single('image'), createUser)
 router.route('/login').post(login)
 router.route('/userInform/:account').get(getUserInform)
-
 router.use(authMiddleware) //valid token
 
+router.route('/tokenData').get(getTokenData)
 router.route('/songs').get(getSongByUser)
-router.route('/test').get(test)
 module.exports = router

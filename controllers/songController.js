@@ -153,6 +153,7 @@ exports.updateSongBySongId = async (req, res) => {
 }
 exports.getBrowseSongs = async (req, res) => {
   try {
+    const page = Number(req.query.page)
     const categoryId = req.params.categoryId //Id若是 all,則為全部歌曲
 
     const orderStr = req.params.orderStr //最多喜歡:like,最新:latest
@@ -191,6 +192,8 @@ exports.getBrowseSongs = async (req, res) => {
         }
       },
       { $sort: { createdAt: 1 } },
+      { $skip: (page - 1) * 5 },
+      { $limit: 6 },
       {
         $project: {
           _id: 1,
@@ -201,10 +204,13 @@ exports.getBrowseSongs = async (req, res) => {
         }
       }
     ])
-
+    const hasNext = songData.length === 6
+    const splicSongData = songData.splice(0, 5)
     res.status(200).json({
       status: 'success',
-      songs: songData
+      songs: splicSongData,
+      page: page,
+      hasNext: hasNext
     })
   } catch (e) {
     res.status(400).json({

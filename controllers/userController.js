@@ -128,7 +128,7 @@ exports.login = async (req, res) => {
   }
 }
 
-exports.test = (req, res) => {
+exports.getTokenData = (req, res) => {
   res.json({
     status: 'success',
     user: req.user
@@ -166,7 +166,7 @@ exports.getUserInform = async (req, res) => {
       { _id: 1, account: 1, name: 1, intro: 1, image: 1, songs: 1 }
     ).populate({
       path: 'songs',
-      select: ['_id', 'name', 'image', 'author','mp3'],
+      select: ['_id', 'name', 'image', 'author', 'mp3'],
       populate: {
         path: 'author',
         select: ['name', 'account']
