@@ -14,15 +14,14 @@ const {
 const authMiddleware = require('../middleware/authMiddleware')
 
 router.route('/category/:categoryId/order/:orderStr').get(getBrowseSongs)
-
+router.route('/:songId').get(getSongBySongId)
 router.use(authMiddleware) //valid token
 
 router.route('/').post(upload.fields([{ name: 'mp3' }, { name: 'img' }]), createSong)
 
 router
   .route('/:songId')
-  .get(getSongBySongId)
   .delete(deleteSongBySongId)
   .patch(upload.fields([{ name: 'img' }]), updateSongBySongId)
-  
+
 module.exports = router

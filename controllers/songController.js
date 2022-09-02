@@ -66,9 +66,9 @@ exports.createSong = async (req, res) => {
 exports.getSongBySongId = async (req, res) => {
   try {
     const songId = req.params.songId
-    const song = await Song.findById({ _id: songId },"_id name intro lyric mp3 image createdAt")
+    const song = await Song.findById({ _id: songId }, '_id name intro lyric mp3 image createdAt')
       .populate({ path: 'songCategory', select: 'name' })
-      .populate({ path: 'author', select: 'name account' })
+      .populate({ path: 'author', select: 'name account image' })
     res.status(200).json({
       status: 'success',
       song: song
@@ -188,19 +188,21 @@ exports.getBrowseSongs = async (req, res) => {
         $addFields: {
           'author.name': '$userInfo.name',
           'author._id': '$userInfo._id',
-          'author.account': '$userInfo.account'
+          'author.account': '$userInfo.account',
+          'author.image': '$userInfo.image'
         }
       },
-      { $sort: { createdAt: 1 } },
+      { $sort: { createdAt: -1,_id:-1 } },
       { $skip: (page - 1) * 5 },
       { $limit: 6 },
       {
         $project: {
           _id: 1,
           name: 1,
-          author: { name: 1, account: 1 },
+          author: { name: 1, account: 1, image: 1 },
           image: 1,
-          mp3: 1
+          mp3: 1,
+          intro: 1
         }
       }
     ])
